@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>识字答题小游戏</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui, sans-serif; -webkit-tap-highlight-color: transparent;}
+body{background:#f0f4f9;padding:16px;}
+.container{max-width:800px;margin:0 auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 4px 20px #00000015;}
+h1{text-align:center;color:#2b68d9;margin-bottom:20px;font-size:24px;}
+.flex-row{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;justify-content:center;}
+.btn{
+  padding:12px 18px;
+  border-radius:12px;
+  border:1px solid #dce3f0;
+  background:#edf1f8;
+  font-size:16px;
+  cursor:pointer;
+  transition:0.2s;
+}
+.btn:active{background:#dde5f3;}
+.btn.active-selected{
+  background:#2b68d9;
+  color:#ffffff;
+  border:2px solid #4285f4;
+}
+.checkbox-line{display:flex;align-items:center;gap:8px;margin:12px 0;justify-content:center;font-size:16px;}
+.confirm-btn{width:100%;padding:14px;border-radius:14px;background:#28a745;color:#fff;border:none;font-size:18px;cursor:pointer;margin-bottom:14px;}
+.back-btn{width:100%;padding:14px;border-radius:14px;background:#e9edf5;color:#333;border:none;font-size:18px;cursor:pointer;}
+.page{display:none;}
+#page-home{display:block;}
+.question-card{text-align:center;padding:24px 0;}
+.question-char{font-size:64px;font-weight:bold;color:#222;margin:16px 0;}
+.option-btn{width:92%;margin:8px auto;padding:14px;border-radius:12px;border:1px solid #cad5e8;background:#f0f4fb;font-size:18px;cursor:pointer;display:block;}
+.option-btn:active{background:#dde8f8;}
+.answer-correct{background:#b9e8c9 !important;}
+.answer-wrong{background:#f8c7c7 !important;}
+.tip-text{font-size:20px;margin:12px 0;min-height:28px;}
+.progress-line{margin-bottom:16px;color:#444;text-align:center;}
+.star-wrap{height:90px;position:relative;overflow:hidden;}
+.star{
+  position:absolute;
+  font-size:36px;
+  color:#ffc107;
+  left:50%;
+  transform:translateX(-50%);
+  animation:starAnim 1.2s ease-out forwards;
+}
+@keyframes starAnim{
+  0%{top:0;opacity:1;transform:translateX(-50%) scale(0.4);}
+  100%{top:-50px;opacity:0;transform:translateX(-50%) scale(1.4);}
+}
+.rank-info{text-align:center;margin:12px 0;font-size:16px;color:#2b68d9;}
+.setting-block{border:1px solid #dbe3f0;border-radius:14px;padding:16px;margin:16px 0;}
+.pause-btn{background:#ff9800;color:white;}
+/* 新增页面样式 */
+.form-item{margin:12px 0;}
+.form-item label{display:block;margin-bottom:4px;font-size:16px;}
+.form-item input{width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;font-size:16px;}
+.word-list-box{max-height:320px;overflow-y:auto;border:1px solid #ddd;border-radius:10px;padding:12px;text-align:left;}
+.word-item{padding:6px 0;border-bottom:1px solid #eee;font-size:15px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- 【首页主菜单】 -->
+  <div id="page-home" class="page">
+    <h1>识字答题小游戏</h1>
+    <div class="rank-info" id="rankText"></div>
+    <div style="text-align:center;margin:24px 0;">
+      <button class="confirm-btn" id="btnHomeStart" style="max-width:400px;margin-bottom:12px;">开始游戏</button>
+      <button class="btn" id="btnHomeWrongReview" style="max-width:400px;margin-bottom:12px;width:100%;">错题专项复习</button>
+      <button class="btn" id="btnHomeGameSet" style="max-width:400px;margin-bottom:12px;width:100%;">音效/朗读设置</button>
+      <button class="btn" id="btnHomeViewWord" style="max-width:400px;margin-bottom:12px;width:100%;">查看字库</button>
+      <button class="btn" id="btnHomeAddWord" style="max-width:400px;width:100%;">增加字库</button>
+    </div>
+  </div>
+
+  <!-- 设置页面 -->
+  <div id="page-setup" class="page">
+    <h1>游戏参数设置</h1>
+    <div>
+      <p style="margin-bottom:10px;font-size:16px;">选择难度:</p>
+      <div class="flex-row">
+        <button class="btn" data-diff="1">初级</button>
+        <button class="btn" data-diff="2">中级</button>
+        <button class="btn" data-diff="3">高级</button>
+      </div>
+    </div>
+    <div>
+      <p style="margin-bottom:10px;font-size:16px;">游戏模式:</p>
+      <div class="flex-row">
+        <button class="btn" data-mode="pinyin">拼音模式</button>
+        <button class="btn" data-mode="group">组词模式</button>
+      </div>
+      <div class="flex-row">
+        <button class="btn" data-mode="chengyu">成语拓展</button>
+        <button class="btn" data-mode="mix">混合模式</button>
+      </div>
+    </div>
+    <div>
+      <p style="margin-bottom:10px;font-size:16px;">答题数量:</p>
+      <div class="flex-row">
+        <button class="btn" data-count="5">5题</button>
+        <button class="btn" data-count="10">10题</button>
+      </div>
+      <div class="flex-row">
+        <button class="btn" data-count="20">20题</button>
+        <button class="btn" data-count="30">30题</button>
+      </div>
+    </div>
+    <div class="checkbox-line">
+      <input type="checkbox" id="timerCheck">
+      <label for="timerCheck">开启答题计时（每题20秒）</label>
+    </div>
+    <button class="confirm-btn" id="btnStartQuiz">开始答题</button>
+    <button class="back-btn" id="btnSetupBack">返回主菜单</button>
+  </div>
+
+  <!-- 音效朗读设置 -->
+  <div id="page-gamesetting" class="page">
+    <h1>音效 & 朗读设置</h1>
+    <div class="setting-block">
+      <div class="checkbox-line">
+        <input type="checkbox" id="soundCheck">
+        <label for="soundCheck">开启答题音效</label>
+      </div>
+      <div class="checkbox-line">
+        <input type="checkbox" id="speakCheck">
+        <label for="speakCheck">开启汉字朗读</label>
+      </div>
+    </div>
+    <button class="confirm-btn" id="btnSaveGameSet">保存设置</button>
+    <button class="back-btn" id="btnSetBack">返回主菜单</button>
+  </div>
+
+  <!-- 答题页面 -->
+  <div id="page-quiz" class="page">
+    <h1>答题中</h1>
+    <div class="progress-line" id="progressText"></div>
+    <div class="star-wrap" id="starArea"></div>
+    <div class="question-card" id="quiz-content"></div>
+    <button class="btn pause-btn" id="btnPauseQuiz">暂停，返回主菜单</button>
+  </div>
+
+  <!-- 错题复习页 -->
+  <div id="page-wrongreview" class="page">
+    <h1>错题专项复习</h1>
+    <div id="wrongReviewTip" style="text-align:center;margin:20px;font-size:16px;"></div>
+    <div class="star-wrap" id="wrongStarArea"></div>
+    <div class="question-card" id="wrongQuizContent"></div>
+    <button class="back-btn" id="btnWrongBack">返回主菜单</button>
+  </div>
+
+  <!-- 结果页面 -->
+  <div id="page-result" class="page">
+    <h1>答题结束</h1>
+    <div style="text-align:center;font-size:20px;margin:24px 0;" id="result-content"></div>
+    <button class="back-btn" id="btnResultBack">返回主菜单</button>
+  </div>
+
+  <!-- 查看字库页面 -->
+  <div id="page-viewwordlib" class="page">
+    <h1>查看全部字库</h1>
+    <div class="word-list-box" id="wordLibBox"></div>
+    <button class="back-btn" id="btnWordLibBack" style="margin-top:16px;">返回主菜单</button>
+  </div>
+
+  <!-- 添加字库页面 -->
+  <div id="page-addword" class="page">
+    <h1>新增汉字词条</h1>
+    <div class="form-item">
+      <label>汉字（必填）</label>
+      <input id="inp-hz" placeholder="例如：春">
+    </div>
+    <div class="form-item">
+      <label>拼音（必填）</label>
+      <input id="inp-py" placeholder="例如：chūn">
+    </div>
+    <div class="form-item">
+      <label>组词（必填）</label>
+      <input id="inp-group" placeholder="例如：春天">
+    </div>
+    <div class="form-item">
+      <label>成语（必填）</label>
+      <input id="inp-idiom" placeholder="例如：春暖花开">
+    </div>
+    <div class="form-item">
+      <label>难度（1初级 /2中级 /3高级）</label>
+      <input id="inp-diff" value="1" placeholder="1/2/3">
+    </div>
+    <button class="confirm-btn" id="btnAddWord">添加词条</button>
+    <button class="back-btn" id="btnAddWordBack">返回主菜单</button>
+  </div>
+</div>
+
+<script>
+// ========== 等级配置 6个等级称号 ==========
+const rankList = [
+  {exp:0, title:"识字小白"},
+  {exp:100, title:"识字新手"},
+  {exp:300, title:"识字学徒"},
+  {exp:600, title:"识字达人"},
+  {exp:1000, title:"识字大师"},
+  {exp:1500, title:"识字宗师"}
+];
+
+// 全局配置
+let setting = {
+  diff: 1,
+  mode: "pinyin",
+  qCount:10,
+  timer:false
+};
+let gameState = {
+  currentIndex:0,
+  questionPool:[],
+  score:0,
+  timerObj:null,
+  isWrongReview:false
+};
+let userData = {
+  exp:0,
+  wrongList:[],
+  soundOn:true,
+  speakOn:true,
+  customWordList:[]
+};
+
+// 内置基础汉字题库
+const baseWordList = [
+  {hz:"山",py:"shān",group:"大山",idiom:"山清水秀",diff:1},
+  {hz:"水",py:"shuǐ",group:"河水",idiom:"山高水长",diff:1},
+  {hz:"日",py:"rì",group:"日光",idiom:"日新月异",diff:1},
+  {hz:"月",py:"yuè",group:"月亮",idiom:"花好月圆",diff:1},
+  {hz:"火",py:"huǒ",group:"火苗",idiom:"热火朝天",diff:1},
+  {hz:"田",py:"tián",group:"田地",idiom:"瓜田李下",diff:1},
+  {hz:"鸟",py:"niǎo",group:"小鸟",idiom:"鸟语花香",diff:1},
+  {hz:"云",py:"yún",group:"白云",idiom:"云开雾散",diff:1},
+  {hz:"人",py:"rén",group:"人们",idiom:"人来人往",diff:1},
+  {hz:"口",py:"kǒu",group:"口水",idiom:"口若悬河",diff:1},
+  {hz:"手",py:"shǒu",group:"手掌",idiom:"手忙脚乱",diff:1},
+  {hz:"足",py:"zú",group:"手足",idiom:"手足情深",diff:1},
+  {hz:"耳",py:"ěr",group:"耳朵",idiom:"耳闻目睹",diff:1},
+  {hz:"目",py:"mù",group:"目光",idiom:"目不转睛",diff:1},
+  {hz:"头",py:"tóu",group:"头发",idiom:"头头是道",diff:1},
+  {hz:"舌",py:"shé",group:"舌头",idiom:"舌战群儒",diff:1},
+  {hz:"禾",py:"hé",group:"禾苗",idiom:"禾苗茁壮",diff:1},
+  {hz:"木",py:"mù",group:"树木",idiom:"木已成舟",diff:1},
+  {hz:"林",py:"lín",group:"树林",idiom:"林林总总",diff:1},
+  {hz:"森",py:"sēn",group:"森林",idiom:"森罗万象",diff:1},
+  {hz:"花",py:"huā",group:"花朵",idiom:"花团锦簇",diff:1},
+  {hz:"草",py:"cǎo",group:"小草",idiom:"草长莺飞",diff:1},
+  {hz:"虫",py:"chóng",group:"虫子",idiom:"虫鸣鸟叫",diff:1},
+  {hz:"鱼",py:"yú",group:"小鱼",idiom:"鱼跃龙门",diff:1},
+  {hz:"马",py:"mǎ",group:"小马",idiom:"马到成功",diff:1},
+  {hz:"牛",py:"niú",group:"小牛",idiom:"牛气冲天",diff:1},
+  {hz:"羊",py:"yáng",group:"小羊",idiom:"亡羊补牢",diff:1},
+  {hz:"犬",py:"quǎn",group:"家犬",idiom:"鸡犬不宁",diff:1},
+  {hz:"鸡",py:"jī",group:"小鸡",idiom:"闻鸡起舞",diff:1},
+  {hz:"兔",py:"tù",group:"兔子",idiom:"守株待兔",diff:1},
+  {hz:"龙",py:"lóng",group:"巨龙",idiom:"龙飞凤舞",diff:1},
+  {hz:"虎",py:"hǔ",group:"老虎",idiom:"虎虎生威",diff:1},
+  {hz:"象",py:"xiàng",group:"大象",idiom:"包罗万象",diff:1},
+  {hz:"石",py:"shí",group:"石头",idiom:"石沉大海",diff:1},
+  {hz:"土",py:"tǔ",group:"泥土",idiom:"土生土长",diff:1},
+  {hz:"金",py:"jīn",group:"金子",idiom:"金碧辉煌",diff:1},
+  {hz:"银",py:"yín",group:"白银",idiom:"银装素裹",diff:1},
+  {hz:"风",py:"fēng",group:"春风",idiom:"风和日丽",diff:1},
+  {hz:"雨",py:"yǔ",group:"雨水",idiom:"雨过天晴",diff:1},
+  {hz:"雪",py:"xuě",group:"雪花",idiom:"雪中送炭",diff:1},
+  {hz:"雷",py:"léi",group:"雷声",idiom:"雷厉风行",diff:1},
+  {hz:"电",py:"diàn",group:"闪电",idiom:"电闪雷鸣",diff:1},
+  {hz:"星",py:"xīng",group:"星星",idiom:"星罗棋布",diff:1},
+  {hz:"光",py:"guāng",group:"阳光",idiom:"光彩夺目",diff:1},
+  {hz:"春",py:"chūn",group:"春天",idiom:"春暖花开",diff:1},
+  {hz:"夏",py:"xià",group:"夏天",idiom:"夏日炎炎",diff:1},
+  {hz:"秋",py:"qiū",group:"秋天",idiom:"秋高气爽",diff:1},
+  {hz:"冬",py:"dōng",group:"冬天",idiom:"寒冬腊月",diff:1},
+  {hz:"早",py:"zǎo",group:"早上",idiom:"早出晚归",diff:1},
+  {hz:"晚",py:"wǎn",group:"夜晚",idiom:"晚来天雪",diff:1},
+  {hz:"晨",py:"chén",group:"清晨",idiom:"晨光熹微",diff:1},
+  {hz:"昏",py:"hūn",group:"黄昏",idiom:"昏天黑地",diff:1},
+  {hz:"东",py:"dōng",group:"东方",idiom:"东山再起",diff:1},
+  {hz:"西",py:"xī",group:"西方",idiom:"西窗剪烛",diff:1},
+  {hz:"南",py:"nán",group:"南方",idiom:"南辕北辙",diff:1},
+  {hz:"北",py:"běi",group:"北方",idiom:"北雁南飞",diff:1},
+  {hz:"中",py:"zhōng",group:"中间",idiom:"中流砥柱",diff:1},
+  {hz:"左",py:"zuǒ",group:"左边",idiom:"左顾右盼",diff:1},
+  {hz:"右",py:"yòu",group:"右边",idiom:"左右逢源",diff:1},
+  {hz:"前",py:"qián",group:"前面",idiom:"前赴后继",diff:1},
+  {hz:"后",py:"hòu",group:"后面",idiom:"后起之秀",diff:1},
+  {hz:"上",py:"shàng",group:"上面",idiom:"上天入地",diff:1},
+  {hz:"下",py:"xià",group:"下面",idiom:"下里巴人",diff:1},
+  {hz:"大",py:"dà",group:"大小",idiom:"大材小用",diff:1},
+  {hz:"小",py:"xiǎo",group:"小草",idiom:"小题大做",diff:1},
+  {hz:"多",py:"duō",group:"多少",idiom:"多才多艺",diff:1},
+  {hz:"少",py:"shǎo",group:"少数",idiom:"少言寡语",diff:1},
+  {hz:"高",py:"gāo",group:"高山",idiom:"高瞻远瞩",diff:1},
+  {hz:"低",py:"dī",group:"低头",idiom:"低声下气",diff:1},
+  {hz:"长",py:"cháng",group:"长短",idiom:"长驱直入",diff:1},
+  {hz:"短",py:"duǎn",group:"简短",idiom:"短兵相接",diff:1},
+  {hz:"远",py:"yuǎn",group:"远方",idiom:"远见卓识",diff:1},
+  {hz:"近",py:"jìn",group:"近处",idiom:"近水楼台",diff:1},
+  {hz:"快",py:"kuài",group:"快速",idiom:"快马加鞭",diff:1},
+  {hz:"慢",py:"màn",group:"缓慢",idiom:"慢条斯理",diff:1},
+  {hz:"好",py:"hǎo",group:"好人",idiom:"好事多磨",diff:1},
+  {hz:"坏",py:"huài",group:"坏人",idiom:"坏法乱纪",diff:1},
+  {hz:"美",py:"měi",group:"美丽",idiom:"美不胜收",diff:1},
+  {hz:"丑",py:"chǒu",group:"丑陋",idiom:"丑态百出",diff:1},
+  {hz:"强",py:"qiáng",group:"强大",idiom:"强兵猛将",diff:1},
+  {hz:"弱",py:"ruò",group:"弱小",idiom:"弱不禁风",diff:1},
+  {hz:"胖",py:"pàng",group:"肥胖",idiom:"心宽体胖",diff:1},
+  {hz:"瘦",py:"shòu",group:"瘦小",idiom:"骨瘦如柴",diff:1},
+  {hz:"白",py:"bái",group:"白色",idiom:"白手起家",diff:1},
+  {hz:"黑",py:"hēi",group:"黑色",idiom:"黑灯瞎火",diff:1},
+  {hz:"红",py:"hóng",group:"红色",idiom:"红红火火",diff:1},
+  {hz:"黄",py:"huáng",group:"黄色",idiom:"黄花晚节",diff:1},
+  {hz:"蓝",py:"lán",group:"蓝天",idiom:"青出于蓝",diff:1},
+  {hz:"绿",py:"lǜ",group:"绿色",idiom:"绿水青山",diff:1},
+  {hz:"橙",py:"chéng",group:"橙子",idiom:"橙黄橘绿",diff:1},
+  {hz:"紫",py:"zǐ",group:"紫色",idiom:"万紫千红",diff:1},
+  {hz:"一",py:"yī",group:"一个",idiom:"一心一意",diff:1},
+  {hz:"二",py:"èr",group:"二个",idiom:"二话不说",diff:1},
+  {hz:"三",py:"sān",group:"三个",idiom:"三心二意",diff:1},
+  {hz:"四",py:"sì",group:"四个",idiom:"四面八方",diff:1},
+  {hz:"五",py:"wǔ",group:"五个",idiom:"五颜六色",diff:1},
+  {hz:"六",py:"liù",group:"六个",idiom:"六神无主",diff:1},
+  {hz:"七",py:"qī",group:"七个",idiom:"七上八下",diff:1},
+  {hz:"八",py:"bā",group:"八个",idiom:"八面玲珑",diff:1},
+  {hz:"九",py:"jiǔ",group:"九个",idiom:"九牛一毛",diff:1},
+  {hz:"十",py:"shí",group:"十个",idiom:"十全十美",diff:1},
+  {hz:"百",py:"bǎi",group:"一百",idiom:"百发百中",diff:1},
+  {hz:"千",py:"qiān",group:"千万",idiom:"千军万马",diff:1},
+  {hz:"万",py:"wàn",group:"一万",idiom:"万无一失",diff:1},
+  {hz:"爸",py:"bà",group:"爸爸",idiom:"慈父严爸",diff:1},
+  {hz:"妈",py:"mā",group:"妈妈",idiom:"母爱如山",diff:1},
+  {hz:"爷",py:"yé",group:"爷爷",idiom:"爷慈孙孝",diff:1},
+  {hz:"奶",py:"nǎi",group:"奶奶",idiom:"白发奶娘",diff:1},
+  {hz:"哥",py:"gē",group:"哥哥",idiom:"兄友哥恭",diff:1},
+  {hz:"姐",py:"jiě",group:"姐姐",idiom:"姐善弟恭",diff:1},
+  {hz:"弟",py:"dì",group:"弟弟",idiom:"称兄道弟",diff:1},
+  {hz:"妹",py:"mèi",group:"妹妹",idiom:"姐妹情深",diff:1},
+  {hz:"师",py:"shī",group:"老师",idiom:"良师益友",diff:1},
+  {hz:"友",py:"yǒu",group:"朋友",idiom:"友达之交",diff:1},
+  {hz:"家",py:"jiā",group:"家庭",idiom:"家和万事兴",diff:1},
+  {hz:"校",py:"xiào",group:"学校",idiom:"校园书香",diff:1},
+  {hz:"书",py:"shū",group:"书本",idiom:"书香门第",diff:1},
+  {hz:"笔",py:"bǐ",group:"钢笔",idiom:"妙笔生花",diff:1},
+  {hz:"纸",py:"zhǐ",group:"白纸",idiom:"纸上谈兵",diff:1},
+  {hz:"尺",py:"chǐ",group:"尺子",idiom:"尺有所短",diff:1},
+  {hz:"桌",py:"zhuō",group:"桌子",idiom:"桌面整洁",diff:1},
+  {hz:"椅",py:"yǐ",group:"椅子",idiom:"藤椅木桌",diff:1},
+  {hz:"灯",py:"dēng",group:"灯光",idiom:"灯火通明",diff:1},
+  {hz:"钟",py:"zhōng",group:"时钟",idiom:"钟鸣鼎食",diff:1},
+  {hz:"门",py:"mén",group:"大门",idiom:"开门见山",diff:1},
+  {hz:"窗",py:"chuāng",group:"窗户",idiom:"窗明几净",diff:1},
+  {hz:"房",py:"fáng",group:"房子",idiom:"房舍整洁",diff:1},
+  {hz:"屋",py:"wū",group:"屋子",idiom:"爱屋及乌",diff:1},
+  {hz:"桥",py:"qiáo",group:"大桥",idiom:"过河拆桥",diff:1},
+  {hz:"路",py:"lù",group:"马路",idiom:"路不拾遗",diff:1},
+  {hz:"车",py:"chē",group:"汽车",idiom:"车水马龙",diff:1},
+  {hz:"船",py:"chuán",group:"小船",idiom:"顺水行船",diff:1},
+  {hz:"舟",py:"zhōu",group:"小舟",idiom:"同舟共济",diff:1},
+  {hz:"饭",py:"fàn",group:"米饭",idiom:"粗茶淡饭",diff:1},
+  {hz:"面",py:"miàn",group:"面条",idiom:"面如桃花",diff:1},
+  {hz:"米",py:"mǐ",group:"大米",idiom:"米珠薪桂",diff:1},
+  {hz:"菜",py:"cài",group:"青菜",idiom:"菜香四溢",diff:1},
+  {hz:"瓜",py:"guā",group:"西瓜",idiom:"瓜熟蒂落",diff:1},
+  {hz:"果",py:"guǒ",group:"水果",idiom:"硕果累累",diff:1},
+  {hz:"桃",py:"táo",group:"桃子",idiom:"桃李芬芳",diff:1},
+  {hz:"梨",py:"lí",group:"梨子",idiom:"杏雨梨云",diff:1},
+  {hz:"杏",py:"xìng",group:"杏子",idiom:"杏雨梨云",diff:1},
+  {hz:"苹",py:"píng",group:"苹果",idiom:"苹风拂面",diff:1},
+  {hz:"蕉",py:"jiāo",group:"香蕉",idiom:"蕉叶听雨",diff:1},
+  {hz:"豆",py:"dòu",group:"豆子",idiom:"豆蔻年华",diff:1},
+  {hz:"麦",py:"mài",group:"麦子",idiom:"麦浪翻滚",diff:1},
+  {hz:"棉",py:"mián",group:"棉花",idiom:"棉柔温暖",diff:1},
+  {hz:"布",py:"bù",group:"布料",idiom:"布衣之交",diff:1},
+  {hz:"衣",py:"yī",group:"衣服",idiom:"衣食无忧",diff:1},
+  {hz:"帽",py:"mào",group:"帽子",idiom:"草帽遮阴",diff:1},
+  {hz:"鞋",py:"xié",group:"鞋子",idiom:"鞋履轻便",diff:1},
+  {hz:"袜",py:"wà",group:"袜子",idiom:"布袜青鞋",diff:1},
+  {hz:"巾",py:"jīn",group:"毛巾",idiom:"巾帼英雄",diff:1},
+  {hz:"壶",py:"hú",group:"水壶",idiom:"冰壶秋月",diff:1},
+  {hz:"杯",py:"bēi",group:"水杯",idiom:"杯弓蛇影",diff:1},
+  {hz:"碗",py:"wǎn",group:"饭碗",idiom:"饭碗安稳",diff:1},
+  {hz:"盘",py:"pán",group:"盘子",idiom:"盘根错节",diff:1},
+  {hz:"筷",py:"kuài",group:"筷子",idiom:"竹筷木勺",diff:1},
+  {hz:"勺",py:"sháo",group:"勺子",idiom:"勺舀清泉",diff:1},
+  {hz:"刀",py:"dāo",group:"小刀",idiom:"刀光剑影",diff:1},
+  {hz:"剪",py:"jiǎn",group:"剪刀",idiom:"剪烛西窗",diff:1},
+  {hz:"绳",py:"shéng",group:"绳子",idiom:"绳之以法",diff:1},
+  {hz:"针",py:"zhēn",group:"针线",idiom:"一针见血",diff:1},
+  {hz:"线",py:"xiàn",group:"丝线",idiom:"一线生机",diff:1},
+  {hz:"画",py:"huà",group:"图画",idiom:"画龙点睛",diff:2},
+  {hz:"诗",py:"shī",group:"诗歌",idiom:"诗情画意",diff:2},
+  {hz:"歌",py:"gē",group:"歌曲",idiom:"歌功颂德",diff:2},
+  {hz:"舞",py:"wǔ",group:"舞蹈",idiom:"闻鸡起舞",diff:2},
+  {hz:"琴",py:"qín",group:"古琴",idiom:"琴棋书画",diff:2},
+  {hz:"棋",py:"qí",group:"下棋",idiom:"棋逢对手",diff:2},
+  {hz:"箭",py:"jiàn",group:"弓箭",idiom:"箭无虚发",diff:2},
+  {hz:"弓",py:"gōng",group:"拉弓",idiom:"弓满弦紧",diff:2},
+  {hz:"笛",py:"dí",group:"笛子",idiom:"笛声悠扬",diff:2},
+  {hz:"鼓",py:"gǔ",group:"大鼓",idiom:"鼓舞人心",diff:2},
+  {hz:"旗",py:"qí",group:"旗帜",idiom:"旗开得胜",diff:2},
+  {hz:"帆",py:"fān",group:"船帆",idiom:"一帆风顺",diff:2},
+  {hz:"港",py:"gǎng",group:"港口",idiom:"港湾停泊",diff:2},
+  {hz:"滩",py:"tān",group:"沙滩",idiom:"滩涂广阔",diff:2},
+  {hz:"峡",py:"xiá",group:"峡谷",idiom:"峡谷幽深",diff:2},
+  {hz:"峰",py:"fēng",group:"山峰",idiom:"峰回路转",diff:2},
+  {hz:"岗",py:"gǎng",group:"山岗",idiom:"岗峦起伏",diff:2},
+  {hz:"泉",py:"quán",group:"泉水",idiom:"泉涌不息",diff:2},
+  {hz:"溪",py:"xī",group:"小溪",idiom:"溪水潺潺",diff:2},
+  {hz:"湖",py:"hú",group:"湖水",idiom:"湖光山色",diff:2},
+  {hz:"海",py:"hǎi",group:"大海",idiom:"海阔天空",diff:2},
+  {hz:"洋",py:"yáng",group:"海洋",idiom:"洋洋大观",diff:2},
+  {hz:"波",py:"bō",group:"波浪",idiom:"波澜壮阔",diff:2},
+  {hz:"浪",py:"làng",group:"浪花",idiom:"浪涛滚滚",diff:2},
+  {hz:"涛",py:"tāo",group:"波涛",idiom:"惊涛骇浪",diff:2},
+  {hz:"雾",py:"wù",group:"大雾",idiom:"雾里看花",diff:2},
+  {hz:"霞",py:"xiá",group:"晚霞",idiom:"朝霞满天",diff:2},
+  {hz:"虹",py:"hóng",group:"彩虹",idiom:"彩虹当空",diff:2},
+  {hz:"霜",py:"shuāng",group:"白霜",idiom:"霜叶知秋",diff:2},
+  {hz:"露",py:"lù",group:"露水",idiom:"露珠晶莹",diff:2},
+  {hz:"蝶",py:"dié",group:"蝴蝶",idiom:"蝶舞花间",diff:2},
+  {hz:"蜂",py:"fēng",group:"蜜蜂",idiom:"蜂飞蝶舞",diff:2},
+  {hz:"蜻",py:"qīng",group:"蜻蜓",idiom:"蜻蜓点水",diff:2},
+  {hz:"蜓",py:"tíng",group:"蜻蜓",idiom:"蜻蜓点水",diff:2},
+  {hz:"蝉",py:"chán",group:"知了",idiom:"蝉鸣盛夏",diff:2},
+  {hz:"蚁",py:"yǐ",group:"蚂蚁",idiom:"蚁穴溃堤",diff:2},
+  {hz:"蛾",py:"é",group:"飞蛾",idiom:"飞蛾扑火",diff:2},
+  {hz:"鲸",py:"jīng",group:"鲸鱼",idiom:"鲸波万里",diff:2},
+  {hz:"鸥",py:"ōu",group:"海鸥",idiom:"鸥鸟飞翔",diff:2},
+  {hz:"雁",py:"yàn",group:"大雁",idiom:"雁过留声",diff:2},
+  {hz:"雀",py:"què",group:"麻雀",idiom:"欢呼雀跃",diff:2},
+  {hz:"鹰",py:"yīng",group:"老鹰",idiom:"鹰击长空",diff:2},
+  {hz:"鹅",py:"é",group:"白鹅",idiom:"鹅毛大雪",diff:2},
+  {hz:"鸭",py:"yā",group:"鸭子",idiom:"鸭戏池塘",diff:2},
+  {hz:"狸",py:"lí",group:"狐狸",idiom:"狐假虎威",diff:2},
+  {hz:"熊",py:"xióng",group:"黑熊",idiom:"熊心豹胆",diff:2},
+  {hz:"鹿",py:"lù",group:"小鹿",idiom:"鹿鸣山林",diff:2},
+  {hz:"豹",py:"bào",group:"豹子",idiom:"豹胆雄心",diff:2},
+  {hz:"狮",py:"shī",group:"狮子",idiom:"狮吼山林",diff:2},
+  {hz:"猴",py:"hóu",group:"猴子",idiom:"猴年马月",diff:2},
+  {hz:"杉",py:"shān",group:"杉树",idiom:"杉林挺拔",diff:2},
+  {hz:"柏",py:"bǎi",group:"柏树",idiom:"松柏常青",diff:2},
+  {hz:"松",py:"sōng",group:"松树",idiom:"松鹤延年",diff:2},
+  {hz:"竹",py:"zhú",group:"竹子",idiom:"竹报平安",diff:2},
+  {hz:"荷",py:"hé",group:"荷花",idiom:"荷风送香",diff:2},
+  {hz:"莲",py:"lián",group:"莲花",idiom:"莲开并蒂",diff:2},
+  {hz:"梅",py:"méi",group:"梅花",idiom:"梅傲雪霜",diff:2},
+  {hz:"兰",py:"lán",group:"兰花",idiom:"兰桂齐芳",diff:2},
+  {hz:"菊",py:"jú",group:"菊花",idiom:"秋菊傲霜",diff:2},
+  {hz:"枫",py:"fēng",group:"枫树",idiom:"枫叶如火",diff:2},
+  {hz:"椰",py:"yē",group:"椰子",idiom:"椰树迎风",diff:2},
+  {hz:"荆",py:"jīng",group:"荆棘",idiom:"披荆斩棘",diff:2},
+  {hz:"莓",py:"méi",group:"草莓",idiom:"莓果香甜",diff:2},
+  {hz:"萝",py:"luó",group:"萝卜",idiom:"藤萝缠绕",diff:2},
+  {hz:"菇",py:"gū",group:"蘑菇",idiom:"菌菇丛生",diff:2},
+  {hz:"盐",py:"yán",group:"食盐",idiom:"盐梅之寄",diff:2},
+  {hz:"糖",py:"táng",group:"白糖",idiom:"糖甜如蜜",diff:2},
+  {hz:"醋",py:"cù",group:"白醋",idiom:"酸醋调味",diff:2},
+  {hz:"酱",py:"jiàng",group:"酱料",idiom:"酱香浓郁",diff:2},
+  {hz:"饼",py:"bǐng",group:"饼干",idiom:"饼香可口",diff:2},
+  {hz:"糕",py:"gāo",group:"蛋糕",idiom:"糕点香甜",diff:2},
+  {hz:"饺",py:"jiǎo",group:"饺子",idiom:"水饺团圆",diff:2},
+  {hz:"粽",py:"zòng",group:"粽子",idiom:"粽叶飘香",diff:2},
+  {hz:"粥",py:"zhōu",group:"米粥",idiom:"粥暖人心",diff:2},
+  {hz:"堡",py:"bǎo",group:"城堡",idiom:"固若金堡",diff:2},
+  {hz:"塔",py:"tǎ",group:"宝塔",idiom:"宝塔凌云",diff:2},
+  {hz:"亭",py:"tíng",group:"亭子",idiom:"亭台楼阁",diff:2},
+  {hz:"阁",py:"gé",group:"楼阁",idiom:"空中楼阁",diff:2},
+  {hz:"殿",py:"diàn",group:"大殿",idiom:"殿堂宏伟",diff:3},
+  {hz:"廊",py:"láng",group:"长廊",idiom:"长廊曲折",diff:3},
+  {hz:"巷",py:"xiàng",group:"小巷",idiom:"大街小巷",diff:3},
+  {hz:"驿",py:"yì",group:"驿站",idiom:"驿路花开",diff:3},
+  {hz:"郡",py:"jùn",group:"郡城",idiom:"郡邑安宁",diff:3},
+  {hz:"隅",py:"yú",group:"城隅",idiom:"负隅顽抗",diff:3},
+  {hz:"墟",py:"xū",group:"废墟",idiom:"废墟残垣",diff:3},
+  {hz:"戍",py:"shù",group:"戍守",idiom:"戍守边关",diff:3},
+  {hz:"旌",py:"jīng",group:"旌旗",idiom:"旌旗招展",diff:3},
+  {hz:"铠",py:"kǎi",group:"铠甲",idiom:"铠甲护身",diff:3},
+  {hz:"鞍",py:"ān",group:"马鞍",idiom:"鞍马劳顿",diff:3},
+  {hz:"驹",py:"jū",group:"马驹",idiom:"千里良驹",diff:3},
+  {hz:"骥",py:"jì",group:"良骥",idiom:"老骥伏枥",diff:3},
+  {hz:"隼",py:"sǔn",group:"游隼",idiom:"隼击长空",diff:3},
+  {hz:"雉",py:"zhì",group:"山雉",idiom:"雉鸣山野",diff:3},
+  {hz:"鹄",py:"hú",group:"鸿鹄",idiom:"鸿鹄之志",diff:3},
+  {hz:"蟒",py:"mǎng",group:"蟒蛇",idiom:"蟒游深林",diff:3},
+  {hz:"蕨",py:"jué",group:"蕨菜",idiom:"蕨草丛生",diff:3},
+  {hz:"藓",py:"xiǎn",group:"苔藓",idiom:"苔藓覆石",diff:3},
+  {hz:"榕",py:"róng",group:"榕树",idiom:"榕荫蔽日",diff:3},
+  {hz:"樟",py:"zhāng",group:"樟树",idiom:"樟香悠远",diff:3},
+  {hz:"桦",py:"huà",group:"桦树",idiom:"桦林洁白",diff:3},
+  {hz:"槐",py:"huái",group:"槐树",idiom:"槐影婆娑",diff:3},
+  {hz:"槿",py:"jǐn",group:"木槿",idiom:"槿花朝开",diff:3},
+  {hz:"芍",py:"sháo",group:"芍药",idiom:"芍药芬芳",diff:3},
+  {hz:"芷",py:"zhǐ",group:"白芷",idiom:"岸芷汀兰",diff:3},
+  {hz:"蕙",py:"huì",group:"蕙草",idiom:"蕙质兰心",diff:3},
+  {hz:"馥",py:"fù",group:"馥郁",idiom:"芬芳馥郁",diff:3},
+  {hz:"瀚",py:"hàn",group:"浩瀚",idiom:"浩瀚星河",diff:3},
+  {hz:"渺",py:"miǎo",group:"渺茫",idiom:"烟波浩渺",diff:3},
+  {hz:"湛",py:"zhàn",group:"湛蓝",idiom:"湖水湛蓝",diff:3},
+  {hz:"澈",py:"chè",group:"清澈",idiom:"清澈见底",diff:3},
+  {hz:"熹",py:"xī",group:"熹光",idiom:"晨光熹微",diff:3},
+  {hz:"曙",py:"shǔ",group:"曙光",idiom:"曙光初现",diff:3},
+  {hz:"暮",py:"mù",group:"暮色",idiom:"暮色沉沉",diff:3},
+  {hz:"遐",py:"xiá",group:"遐远",idiom:"闻名遐迩",diff:3},
+  {hz:"迩",py:"ěr",group:"遐迩",idiom:"闻名遐迩",diff:3},
+  {hz:"睿",py:"ruì",group:"睿智",idiom:"睿智通达",diff:3},
+  {hz:"懿",py:"yì",group:"懿德",idiom:"嘉言懿行",diff:3},
+  {hz:"韬",py:"tāo",group:"韬略",idiom:"文韬武略",diff:3},
+  {hz:"骁",py:"xiāo",group:"骁勇",idiom:"骁勇善战",diff:3},
+  {hz:"凛",py:"lǐn",group:"凛冽",idiom:"大义凛然",diff:3},
+  {hz:"铿",py:"kēng",group:"铿锵",idiom:"铿锵有力",diff:3},
+  {hz:"淳",py:"chún",group:"淳朴",idiom:"民风淳朴",diff:3},
+  {hz:"恪",py:"kè",group:"恪守",idiom:"恪守本分",diff:3},
+  {hz:"睦",py:"mù",group:"和睦",idiom:"和睦相处",diff:3},
+  {hz:"瞻",py:"zhān",group:"瞻仰",idiom:"高瞻远瞩",diff:3},
+  {hz:"瞩",py:"zhǔ",group:"瞩目",idiom:"万众瞩目",diff:3},
+  {hz:"纂",py:"zuǎn",group:"编纂",idiom:"纂写典籍",diff:3},
+  {hz:"甄",py:"zhēn",group:"甄别",idiom:"甄别真伪",diff:3},
+  {hz:"翌",py:"yì",group:"翌日",idiom:"翌日清晨",diff:3},
+  {hz:"夙",py:"sù",group:"夙愿",idiom:"夙愿得偿",diff:3},
+  {hz:"殆",py:"dài",group:"危殆",idiom:"百战不殆",diff:3},
+  {hz:"阙",py:"què",group:"宫阙",idiom:"宫阙巍峨",diff:3},
+  {hz:"霄",py:"xiāo",group:"云霄",idiom:"九霄云外",diff:3},
+  {hz:"罡",py:"gāng",group:"罡风",idiom:"罡风浩荡",diff:3},
+  {hz:"穹",py:"qióng",group:"苍穹",idiom:"苍穹浩瀚",diff:3},
+  {hz:"砭",py:"biān",group:"针砭",idiom:"针砭时弊",diff:3},
+  {hz:"帛",py:"bó",group:"布帛",idiom:"玉帛相见",diff:3},
+  {hz:"砚",py:"yàn",group:"砚台",idiom:"笔墨纸砚",diff:3},
+  {hz:"笺",py:"jiān",group:"信笺",idiom:"彩笺传信",diff:3},
+  {hz:"牍",py:"dú",group:"简牍",idiom:"案牍劳形",diff:3},
+  {hz:"醴",py:"lǐ",group:"甘醴",idiom:"醴泉潺潺",diff:3},
+  {hz:"羹",py:"gēng",group:"羹汤",idiom:"残羹冷炙",diff:3},
+  {hz:"庖",py:"páo",group:"庖厨",idiom:"庖丁解牛",diff:3},
+  {hz:"臼",py:"jiù",group:"石臼",idiom:"杵臼之交",diff:3},
+  {hz:"杵",py:"chǔ",group:"木杵",idiom:"铁杵成针",diff:3},
+  {hz:"扉",py:"fēi",group:"门扉",idiom:"柴扉轻启",diff:3},
+  {hz:"棂",py:"líng",group:"窗棂",idiom:"窗棂雕花",diff:3},
+  {hz:"垣",py:"yuán",group:"墙垣",idiom:"断壁残垣",diff:3},
+  {hz:"砧",py:"zhēn",group:"砧石",idiom:"砧石声声",diff:3},
+  {hz:"釜",py:"fǔ",group:"釜锅",idiom:"破釜沉舟",diff:3},
+  {hz:"甑",py:"zèng",group:"瓦甑",idiom:"甑中生尘",diff:3},
+  {hz:"辕",py:"yuán",group:"车辕",idiom:"辕门射戟",diff:3},
+  {hz:"毂",py:"gǔ",group:"轮毂",idiom:"车毂隆隆",diff:3},
+  {hz:"舸",py:"gě",group:"航舸",idiom:"百舸争流",diff:3},
+  {hz:"楫",py:"jí",group:"船楫",idiom:"中流击楫",diff:3},
+  {hz:"棹",py:"zhào",group:"船棹",idiom:"棹舟江上",diff:3},
+  {hz:"钺",py:"yuè",group:"金钺",idiom:"斧钺威严",diff:3},
+  {hz:"戟",py:"jǐ",group:"方戟",idiom:"剑戟森森",diff:3},
+  {hz:"弩",py:"nǔ",group:"弓弩",idiom:"强弩之末",diff:3},
+  {hz:"燧",py:"suì",group:"烽燧",idiom:"烽燧连天",diff:3},
+  {hz:"烽",py:"fēng",group:"烽火",idiom:"烽火连天",diff:3},
+  {hz:"豺",py:"chái",group:"豺狼",idiom:"豺狼当道",diff:3},
+  {hz:"貉",py:"hé",group:"貉兽",idiom:"一丘之貉",diff:3},
+  {hz:"獐",py:"zhāng",group:"獐子",idiom:"獐头鼠目",diff:3},
+  {hz:"麝",py:"shè",group:"香麝",idiom:"麝散幽香",diff:3},
+  {hz:"鸩",py:"zhèn",group:"鸩鸟",idiom:"饮鸩止渴",diff:3},
+  {hz:"鹬",py:"yù",group:"鹬鸟",idiom:"鹬蚌相争",diff:3},
+  {hz:"蟾",py:"chán",group:"蟾蜍",idiom:"蟾宫折桂",diff:3},
+  {hz:"螭",py:"chī",group:"螭龙",idiom:"螭纹雕刻",diff:3},
+  {hz:"夔",py:"kuí",group:"夔兽",idiom:"夔龙起舞",diff:3},
+  {hz:"杞",py:"qǐ",group:"杞树",idiom:"杞人忧天",diff:3},
+  {hz:"檀",py:"tán",group:"檀香",idiom:"檀木芬芳",diff:3},
+  {hz:"楠",py:"nán",group:"楠木",idiom:"楠木珍贵",diff:3},
+  {hz:"梓",py:"zǐ",group:"梓树",idiom:"桑梓情深",diff:3},
+  {hz:"棠",py:"táng",group:"海棠",idiom:"海棠花开",diff:3},
+  {hz:"茉",py:"mò",group:"茉莉",idiom:"茉莉清香",diff:3},
+  {hz:"蔷",py:"qiáng",group:"蔷薇",idiom:"蔷薇满墙",diff:3},
+  {hz:"薇",py:"wēi",group:"野薇",idiom:"采薇而食",diff:3},
+  {hz:"苓",py:"líng",group:"茯苓",idiom:"茯苓入药",diff:3},
+  {hz:"蕈",py:"xùn",group:"蕈菌",idiom:"林间蕈生",diff:3},
+  {hz:"霏",py:"fēi",group:"霏雨",idiom:"雨雪霏霏",diff:3},
+  {hz:"霭",py:"ǎi",group:"云霭",idiom:"暮霭沉沉",diff:3},
+  {hz:"霁",py:"jì",group:"雨霁",idiom:"雨霁天晴",diff:3},
+  {hz:"暝",py:"míng",group:"暝色",idiom:"暝色入林",diff:3},
+  {hz:"皎",py:"jiǎo",group:"皎洁",idiom:"月光皎洁",diff:3},
+  {hz:"皓",py:"hào",group:"皓白",idiom:"皓月当空",diff:3},
+  {hz:"曜",py:"yào",group:"曜光",idiom:"日曜星河",diff:3},
+  {hz:"昱",py:"yù",group:"昱日",idiom:"昱光普照",diff:3},
+  {hz:"昶",py:"chǎng",group:"昶亮",idiom:"天昶云舒",diff:3},
+  {hz:"沧",py:"cāng",group:"沧海",idiom:"沧海桑田",diff:3},
+  {hz:"溟",py:"míng",group:"溟海",idiom:"溟波浩渺",diff:3},
+  {hz:"涔",py:"cén",group:"涔水",idiom:"汗涔如雨",diff:3},
+  {hz:"涓",py:"juān",group:"涓流",idiom:"涓涓细流",diff:3},
+  {hz:"泓",py:"hóng",group:"泓水",idiom:"一泓清泉",diff:3},
+  {hz:"湍",py:"tuān",group:"急湍",idiom:"水流湍急",diff:3},
+  {hz:"涧",py:"jiàn",group:"山涧",idiom:"涧水叮咚",diff:3},
+  {hz:"壑",py:"hè",group:"沟壑",idiom:"千山万壑",diff:3},
+  {hz:"岿",py:"kuī",group:"岿然",idiom:"岿然不动",diff:3},
+  {hz:"屹",py:"yì",group:"屹立",idiom:"屹立不倒",diff:3},
+  {hz:"嶙",py:"lín",group:"嶙峋",idiom:"山石嶙峋",diff:3},
+  {hz:"峨",py:"é",group:"巍峨",idiom:"高山巍峨",diff:3},
+  {hz:"峙",py:"zhì",group:"对峙",idiom:"双峰对峙",diff:3},
+  {hz:"峥",py:"zhēng",group:"峥嵘",idiom:"峥嵘岁月",diff:3},
+  {hz:"峭",py:"qiào",group:"陡峭",idiom:"悬崖峭壁",diff:3},
+  {hz:"峻",py:"jùn",group:"峻岭",idiom:"崇山峻岭",diff:3},
+  {hz:"莽",py:"mǎng",group:"莽原",idiom:"莽原辽阔",diff:3},
+  {hz:"垠",py:"yín",group:"无垠",idiom:"广袤无垠",diff:3},
+  {hz:"畴",py:"chóu",group:"田畴",idiom:"平畴千里",diff:3},
+  {hz:"墒",py:"shāng",group:"土墒",idiom:"墒润禾生",diff:3},
+  {hz:"坷",py:"kě",group:"坎坷",idiom:"坎坷不平",diff:3},
+  {hz:"砾",py:"lì",group:"砾石",idiom:"砾石河滩",diff:3},
+  {hz:"硝",py:"xiāo",group:"硝石",idiom:"硝石如火",diff:3},
+  {hz:"磷",py:"lín",group:"磷光",idiom:"磷光闪烁",diff:3},
+  {hz:"铂",py:"bó",group:"铂金",idiom:"铂金珍贵",diff:3},
+  {hz:"铝",py:"lǚ",group:"铝片",idiom:"铝质轻便",diff:3},
+  {hz:"锰",py:"měng",group:"锰矿",idiom:"锰矿黝黑",diff:3},
+  {hz:"锡",py:"xī",group:"锡块",idiom:"锡光闪闪",diff:3},
+  {hz:"韶",py:"sháo",group:"韶音",idiom:"韶音悦耳",diff:3},
+  {hz:"笙",py:"shēng",group:"笙箫",idiom:"笙箫和鸣",diff:3},
+  {hz:"箫",py:"xiāo",group:"玉箫",idiom:"吹箫引凤",diff:3},
+  {hz:"磬",py:"qìng",group:"石磬",idiom:"钟磬齐鸣",diff:3},
+  {hz:"钲",py:"zhēng",group:"铜钲",idiom:"钲鸣开战",diff:3},
+  {hz:"铎",py:"duó",group:"木铎",idiom:"木铎传声",diff:3},
+  {hz:"鼙",py:"pí",group:"鼙鼓",idiom:"鼙鼓声声",diff:3},
+  {hz:"旒",py:"liú",group:"旗旒",idiom:"旒旗飘扬",diff:3},
+  {hz:"旆",py:"pèi",group:"旆旗",idiom:"旌旗旆展",diff:3},
+  {hz:"轸",py:"zhěn",group:"车轸",idiom:"车轸稳固",diff:3},
+  {hz:"辔",py:"pèi",group:"马辔",idiom:"执辔前行",diff:3},
+  {hz:"骐",py:"qí",group:"骐骥",idiom:"骐骥一跃",diff:3},
+  {hz:"骅",py:"huá",group:"骅骝",idiom:"骅骝千里",diff:3},
+  {hz:"骊",py:"lí",group:"骊马",idiom:"骊驹远去",diff:3},
+  {hz:"骓",py:"zhuī",group:"乌骓",idiom:"乌骓骏马",diff:3},
+  {hz:"骢",py:"cōng",group:"青骢",idiom:"青骢慢行",diff:3},
+  {hz:"鹞",py:"yào",group:"鹞鹰",idiom:"鹞击长空",diff:3},
+  {hz:"鸱",py:"chī",group:"鸱鸟",idiom:"鸱啸山林",diff:3},
+  {hz:"鹪",py:"jiāo",group:"鹪鹩",idiom:"鹪鹩筑巢",diff:3},
+  {hz:"螭",py:"chī",group:"螭兽",idiom:"螭龙盘柱",diff:3},
+  {hz:"虬",py:"qiú",group:"虬龙",idiom:"虬龙盘旋",diff:3},
+  {hz:"蛟",py:"jiāo",group:"蛟龙",idiom:"蛟龙出海",diff:3},
+  {hz:"蜃",py:"shèn",group:"蜃景",idiom:"海市蜃楼",diff:3},
+  {hz:"蜉",py:"fú",group:"蜉蝣",idiom:"蜉蝣朝暮",diff:3},
+  {hz:"蛩",py:"qióng",group:"寒蛩",idiom:"蛩鸣秋夜",diff:3},
+  {hz:"蠓",py:"měng",group:"蠓虫",idiom:"蠓飞林间",diff:3},
+  {hz:"蚋",py:"ruì",group:"蚊蚋",idiom:"蚋舞草丛",diff:3},
+  {hz:"螨",py:"mǎn",group:"螨虫",idiom:"螨藏尘间",diff:3},
+  {hz:"蜥",py:"xī",group:"蜥蜴",idiom:"蜥蜴游岩",diff:3},
+  {hz:"螈",py:"yuán",group:"蝾螈",idiom:"蝾螈栖涧",diff:3},
+  {hz:"螯",py:"áo",group:"螯足",idiom:"蟹螯锋利",diff:3},
+  {hz:"蚌",py:"bàng",group:"河蚌",idiom:"蚌育珍珠",diff:3},
+  {hz:"蚝",py:"háo",group:"生蚝",idiom:"蚝藏浅海",diff:3},
+  {hz:"蛤",py:"gé",group:"蛤蜊",idiom:"蛤蜊藏沙",diff:3},
+  {hz:"螺",py:"luó",group:"海螺",idiom:"海螺鸣响",diff:3},
+  {hz:"珀",py:"pò",group:"琥珀",idiom:"琥珀凝光",diff:3}
+];
+
+function getAllWordList(){
+  return [...baseWordList, ...userData.customWordList];
+}
+
+// ========== 本地存储读写 ==========
+function loadUserData(){
+  const saved = localStorage.getItem("charGameUserData");
+  if(saved) userData = JSON.parse(saved);
+  document.getElementById("soundCheck").checked = userData.soundOn;
+  document.getElementById("speakCheck").checked = userData.speakOn;
+  renderRank();
+}
+function saveUserData(){
+  localStorage.setItem("charGameUserData", JSON.stringify(userData));
+  renderRank();
+}
+function getRank(exp){
+  let curRank = rankList[0];
+  for(let r of rankList){
+    if(exp >= r.exp) curRank = r;
+  }
+  return curRank;
+}
+function renderRank(){
+  const r = getRank(userData.exp);
+  const el = document.getElementById("rankText");
+  if(el) el.innerText = `当前称号：${r.title}｜累计经验：${userData.exp}`;
+}
+
+// ========== 音效 ==========
+function playSound(isCorrect){
+  if(!userData.soundOn) return;
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  if(isCorrect){
+    osc.frequency.value = 520;
+    gain.gain.value = 0.25;
+    osc.start();
+    setTimeout(()=>osc.stop(),180);
+  }else{
+    osc.frequency.value = 220;
+    gain.gain.value =0.25;
+    osc.start();
+    setTimeout(()=>osc.stop(),250);
+  }
+}
+//文字朗读
+function speakText(txt){
+  if(!userData.speakOn) return;
+  const utter = new SpeechSynthesisUtterance(txt);
+  utter.lang = "zh-CN";
+  speechSynthesis.speak(utter);
+}
+
+// 星星动画
+function showStarAnim(isReview=false){
+  const selector = isReview ? "wrongStarArea" : "starArea";
+  const area = document.getElementById(selector);
+  area.innerHTML = `<div class="star">⭐</div>`;
+  setTimeout(()=>area.innerHTML="",1200);
+}
+
+//页面切换
+function showPage(pageId){
+  //切换页面强制清空定时器，防止残留计时器
+  clearTimeout(gameState.timerObj);
+  document.querySelectorAll(".page").forEach(p=>p.style.display="none");
+  document.getElementById(pageId).style.display="block";
+}
+function goSetup(){showPage("page-setup");}
+function goGameSetting(){showPage("page-gamesetting");}
+function goWrongReview(){
+  gameState.isWrongReview = true;
+  if(userData.wrongList.length ===0){
+    document.getElementById("wrongReviewTip").innerText="暂无错题，继续答题积累错题吧！";
+    showPage("page-wrongreview");
+    return;
+  }
+  //复制错题数组，复习过程不修改原始错题数组，复习结束才同步
+  gameState.questionPool = JSON.parse(JSON.stringify(userData.wrongList));
+  gameState.currentIndex=0;
+  showWrongQuestion();
+  showPage("page-wrongreview");
+}
+//查看字库
+function goViewWordLib(){
+  showPage("page-viewwordlib");
+  const allWords = getAllWordList();
+  const box = document.getElementById("wordLibBox");
+  let html = "";
+  allWords.forEach(item=>{
+    html += `<div class="word-item">汉字：${item.hz}｜拼音：${item.py}｜组词：${item.group}｜成语：${item.idiom}｜难度：${item.diff}</div>`;
+  })
+  if(html === ""){
+    html = "<div>暂无汉字，请先添加词条</div>"
+  }
+  box.innerHTML = html;
+}
+//添加字库页面
+function goAddWord(){
+  showPage("page-addword");
+  document.getElementById("inp-hz").value="";
+  document.getElementById("inp-py").value="";
+  document.getElementById("inp-group").value="";
+  document.getElementById("inp-idiom").value="";
+  document.getElementById("inp-diff").value="1";
+}
+//提交新增词条
+function addNewWord(){
+  const hz = document.getElementById("inp-hz").value.trim();
+  const py = document.getElementById("inp-py").value.trim();
+  const group = document.getElementById("inp-group").value.trim();
+  const idiom = document.getElementById("inp-idiom").value.trim();
+  const diff = Number(document.getElementById("inp-diff").value.trim());
+  if(!hz || !py || !group || !idiom){
+    alert("汉字、拼音、组词、成语都不能为空！");
+    return;
+  }
+  if(isNaN(diff) || ![1,2,3].includes(diff)){
+    alert("难度只能填写数字1、2、3");
+    return;
+  }
+  const newWord = {hz,py,group,idiom,diff};
+  userData.customWordList.push(newWord);
+  saveUserData();
+  alert(`添加成功！【${hz}】已存入自定义字库`);
+  goAddWord();
+}
+
+function backHome(){
+  clearTimeout(gameState.timerObj);
+  gameState.isWrongReview = false;
+  showPage("page-home");
+}
+function pauseQuiz(){
+  if(confirm("确认暂停，返回主菜单？")) backHome();
+}
+function saveGameSetting(){
+  userData.soundOn = document.getElementById("soundCheck").checked;
+  userData.speakOn = document.getElementById("speakCheck").checked;
+  saveUserData();
+  alert("设置已保存！");
+  backHome();
+}
+
+// 获取对应模式的答案文本
+function getAnswerByMode(item, mode){
+  if(mode === "pinyin") return item.py;
+  if(mode === "group") return item.group;
+  if(mode === "chengyu") return item.idiom;
+  return item.py;
+}
+
+// 开始普通答题游戏
+function startGame(){
+  setting.timer = document.getElementById("timerCheck").checked;
+  const allWords = getAllWordList();
+  let filterWords = allWords.filter(item=>item.diff === setting.diff);
+  filterWords.sort(()=>Math.random()-0.5);
+  gameState.questionPool = filterWords.slice(0, setting.qCount);
+  if(gameState.questionPool.length === 0){
+    alert("当前难度下没有题库，请补充汉字！");
+    return;
+  }
+  gameState.currentIndex = 0;
+  gameState.score = 0;
+  gameState.isWrongReview = false;
+  showQuestion();
+  showPage("page-quiz");
+}
+
+//渲染普通答题
+function showQuestion(){
+  clearTimeout(gameState.timerObj);
+  const item = gameState.questionPool[gameState.currentIndex];
+  let questionTxt, answerKey, realMode;
+  if(setting.mode === "pinyin"){
+    questionTxt = item.hz;
+    answerKey = item.py;
+    realMode = "pinyin";
+  }else if(setting.mode === "group"){
+    questionTxt = item.hz;
+    answerKey = item.group;
+    realMode = "group";
+  }else if(setting.mode === "chengyu"){
+    questionTxt = item.hz;
+    answerKey = item.idiom;
+    realMode = "chengyu";
+  }else{
+    const rand = Math.floor(Math.random()*3);
+    if(rand===0){questionTxt=item.hz;answerKey=item.py;realMode="pinyin";}
+    else if(rand===1){questionTxt=item.hz;answerKey=item.group;realMode="group";}
+    else{questionTxt=item.hz;answerKey=item.idiom;realMode="chengyu";}
+  }
+  speakText(questionTxt);
+  let wrongOptions = [];
+  const pool = [...gameState.questionPool];
+  while(wrongOptions.length<3 && pool.length>1){
+    const randWord = pool[Math.floor(Math.random()*pool.length)];
+    let opt;
+    if(realMode === "pinyin") opt = randWord.py;
+    else if(realMode === "group") opt = randWord.group;
+    else opt = randWord.idiom;
+    if(opt!==answerKey && !wrongOptions.includes(opt)) wrongOptions.push(opt);
+  }
+  let allOptions = [answerKey, ...wrongOptions];
+  allOptions.sort(()=>Math.random()-0.5);
+  document.getElementById("progressText").innerText = `第${gameState.currentIndex+1}题 / 共${gameState.questionPool.length}题`;
+  let html = `<div class="question-char">${questionTxt}</div>`;
+  allOptions.forEach(opt=>{
+    html += `<button class="option-btn">${opt}</button>`
+  })
+  document.getElementById("quiz-content").innerHTML = html;
+  //绑定选项点击事件
+  const optList = allOptions;
+  const itemIndex = gameState.currentIndex;
+  document.querySelectorAll("#quiz-content .option-btn").forEach((btn, idx)=>{
+    btn.onclick = ()=> checkAnswer(optList[idx], answerKey, btn, itemIndex, realMode);
+  })
+
+  if(setting.timer){
+    gameState.timerObj = setTimeout(()=>{
+      const exist = userData.wrongList.some(w=>w.hz === item.hz);
+      if(!exist){
+        userData.wrongList.push({...item, wrongMode:realMode});
+        saveUserData();
+      }
+      nextQuestion();
+    }, 20000);
+  }
+}
+
+//渲染错题复习
+function showWrongQuestion(){
+  clearTimeout(gameState.timerObj);
+  const item = gameState.questionPool[gameState.currentIndex];
+  const realMode = item.wrongMode || "pinyin";
+  const questionTxt = item.hz;
+  const answerKey = getAnswerByMode(item, realMode);
+  speakText(questionTxt);
+
+  let wrongOptions = [];
+  const pool = [...gameState.questionPool];
+  while(wrongOptions.length<3 && pool.length>1){
+    const randWord = pool[Math.floor(Math.random()*pool.length)];
+    let opt = getAnswerByMode(randWord, realMode);
+    if(opt!==answerKey && !wrongOptions.includes(opt)) wrongOptions.push(opt);
+  }
+  let allOptions = [answerKey, ...wrongOptions];
+  allOptions.sort(()=>Math.random()-0.5);
+
+  document.getElementById("wrongReviewTip").innerText = `错题复习 ${gameState.currentIndex+1}/${gameState.questionPool.length}｜模式：${realMode}`;
+  let html = `<div class="question-char">${questionTxt}</div>`;
+  allOptions.forEach(opt=>{
+    html += `<button class="option-btn">${opt}</button>`
+  })
+  document.getElementById("wrongQuizContent").innerHTML = html;
+  //修复：把选项数组放到外层，点击回调可以正常读取
+  const optList = allOptions;
+  const poolIndex = gameState.currentIndex;
+  document.querySelectorAll("#wrongQuizContent .option-btn").forEach((btn, i)=>{
+    btn.onclick = ()=> checkWrongReview(optList[i], poolIndex, btn);
+  })
+}
+
+// 判断答案 正常答题
+function checkAnswer(userAns, realAns, btnDom, itemIndex, realMode){
+  clearTimeout(gameState.timerObj);
+  const wordItem = gameState.questionPool[itemIndex];
+  const allBtns = document.querySelectorAll("#quiz-content .option-btn");
+  allBtns.forEach(b=>b.disabled=true);
+  if(userAns === realAns){
+    gameState.score +=1;
+    userData.exp +=10;
+    btnDom.classList.add("answer-correct");
+    playSound(true);
+    showStarAnim(false);
+    const idx = userData.wrongList.findIndex(w=>w.hz === wordItem.hz);
+    if(idx>-1) userData.wrongList.splice(idx,1);
+  }else{
+    btnDom.classList.add("answer-wrong");
+    playSound(false);
+    allBtns.forEach(b=>{if(b.innerText === realAns) b.classList.add("answer-correct");})
+    const exist = userData.wrongList.some(w=>w.hz === wordItem.hz);
+    if(!exist) userData.wrongList.push({...wordItem, wrongMode:realMode});
+  }
+  saveUserData();
+  setTimeout(nextQuestion,1200);
+}
+
+//错题复习答题
+function checkWrongReview(userAns, poolIndex, btnDom){
+  clearTimeout(gameState.timerObj);
+  const wordItem = gameState.questionPool[poolIndex];
+  const allBtns = document.querySelectorAll("#page-wrongreview .option-btn");
+  allBtns.forEach(b=>b.disabled=true);
+  const realMode = wordItem.wrongMode || "pinyin";
+  const realAns = getAnswerByMode(wordItem, realMode);
+
+  if(userAns === realAns){
+    btnDom.classList.add("answer-correct");
+    playSound(true);
+    showStarAnim(true);
+    //答对，删除原始错题
+    const idx = userData.wrongList.findIndex(w=>w.hz === wordItem.hz);
+    if(idx>-1) userData.wrongList.splice(idx,1);
+    userData.exp +=8;
+  }else{
+    btnDom.classList.add("answer-wrong");
+    playSound(false);
+    allBtns.forEach(b=>{if(b.innerText === realAns) b.classList.add("answer-correct");})
+    const exist = userData.wrongList.some(w=>w.hz === wordItem.hz);
+    if(!exist) userData.wrongList.push({...wordItem, wrongMode: realMode});
+  }
+  saveUserData();
+  setTimeout(nextWrongQuestion,1200);
+}
+
+//普通模式下一题
+function nextQuestion(){
+  gameState.currentIndex +=1;
+  if(gameState.currentIndex >= gameState.questionPool.length){
+    document.getElementById("result-content").innerHTML = `
+      <p>答题完成！</p>
+      <p>得分：${gameState.score} / ${gameState.questionPool.length}</p>
+      <p>正确率：${(gameState.score/gameState.questionPool.length*100).toFixed(1)}%</p>
+      <p>本次获得经验：${gameState.score*10}</p>
+    `;
+    showPage("page-result");
+  }else{
+    showQuestion();
+  }
+}
+//错题复习下一题
+function nextWrongQuestion(){
+  gameState.currentIndex +=1;
+  if(gameState.currentIndex >= gameState.questionPool.length){
+    alert("错题复习完成！已经清除答对的题目。");
+    backHome();
+  }else{
+    showWrongQuestion();
+  }
+}
+
+// 页面加载完成，一次性绑定所有按钮事件
+window.onload = function(){
+  loadUserData();
+
+  //首页按钮
+  document.getElementById("btnHomeStart").addEventListener("click", goSetup);
+  document.getElementById("btnHomeWrongReview").addEventListener("click", goWrongReview);
+  document.getElementById("btnHomeGameSet").addEventListener("click", goGameSetting);
+  document.getElementById("btnHomeViewWord").addEventListener("click", goViewWordLib);
+  document.getElementById("btnHomeAddWord").addEventListener("click", goAddWord);
+
+  //设置页难度、模式、题数按钮
+  document.querySelectorAll("#page-setup [data-diff]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      setting.diff = Number(btn.dataset.diff);
+      document.querySelectorAll("#page-setup [data-diff]").forEach(b=>b.classList.remove("active-selected"));
+      btn.classList.add("active-selected");
+    })
+  })
+  document.querySelectorAll("#page-setup [data-mode]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      setting.mode = btn.dataset.mode;
+      document.querySelectorAll("#page-setup [data-mode]").forEach(b=>b.classList.remove("active-selected"));
+      btn.classList.add("active-selected");
+    })
+  })
+  document.querySelectorAll("#page-setup [data-count]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      setting.qCount = Number(btn.dataset.count);
+      document.querySelectorAll("#page-setup [data-count]").forEach(b=>b.classList.remove("active-selected"));
+      btn.classList.add("active-selected");
+    })
+  })
+  document.getElementById("btnStartQuiz").addEventListener("click", startGame);
+  document.getElementById("btnSetupBack").addEventListener("click", backHome);
+
+  //音效设置页面
+  document.getElementById("btnSaveGameSet").addEventListener("click", saveGameSetting);
+  document.getElementById("btnSetBack").addEventListener("click", backHome);
+
+  //答题页面
+  document.getElementById("btnPauseQuiz").addEventListener("click", pauseQuiz);
+
+  //错题页返回
+  document.getElementById("btnWrongBack").addEventListener("click", backHome);
+
+  //结果页返回
+  document.getElementById("btnResultBack").addEventListener("click", backHome);
+
+  //查看字库返回
+  document.getElementById("btnWordLibBack").addEventListener("click", backHome);
+
+  //新增词条页面
+  document.getElementById("btnAddWord").addEventListener("click", addNewWord);
+  document.getElementById("btnAddWordBack").addEventListener("click", backHome);
+}
+</script>
+</body>
+</html>
